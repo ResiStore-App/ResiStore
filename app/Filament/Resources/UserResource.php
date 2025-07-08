@@ -123,6 +123,7 @@ class UserResource extends Resource
           ->iconButton()
           ->modalHeading('Edit User')
           ->modalSubmitActionLabel('Simpan')
+          ->modalIcon('heroicon-o-pencil-square')
           ->successNotification(
             Notification::make()
               ->success()
