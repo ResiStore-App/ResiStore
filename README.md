@@ -16,6 +16,7 @@ php artisan key:generate
 ```
 
 3. **Update .env file**
+   
    Edit the following environment variables as needed:
 
 ```shell
@@ -36,9 +37,10 @@ npm run build
 ```
 
 5. **Turn On your MySQL Server:**
+   
    Make sure your MySQL server is running before proceeding.
 
-6. **Run database migration:**
+7. **Run database migration:**
 
 ```shell
 php artisan migrate
