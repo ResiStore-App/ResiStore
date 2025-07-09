@@ -14,6 +14,7 @@ class ListBuyTransactions extends ListRecords
     {
         return [
             Actions\Action::make('Tambah Pembelian')
+                ->label('Tambah Transaksi Pembelian')
                 ->url(fn () => static::getResource()::getUrl('create'))
                 ->color('success')
                 ->button(),

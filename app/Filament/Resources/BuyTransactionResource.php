@@ -4,8 +4,12 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\BuyTransactionResource\Pages;
 use App\Models\Transaction;
+use App\Models\Product;
+use Filament\Resources\Resource;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Forms\Components\{
+    Card,
     DatePicker,
     Hidden,
     Repeater,
@@ -13,9 +17,6 @@ use Filament\Forms\Components\{
     TextInput,
     Toggle
 };
-use Filament\Forms\Get;
-use Filament\Resources\Resource;
-use App\Models\Product;
 use Filament\Tables;
 use Filament\Tables\Table;
 
@@ -27,83 +28,98 @@ class BuyTransactionResource extends Resource
     protected static ?string $label = 'Transaksi Pembelian';
 
     public static function form(Form $form): Form
-{
-    return $form->schema([
-        Hidden::make('jenis_transaksi')->default('pembelian'),
+    {
+        return $form->schema([
+            Card::make([
+                Hidden::make('jenis_transaksi')->default('pembelian'),
 
-        DatePicker::make('tanggal_transaksi')
-            ->required()
-            ->label('Tanggal Transaksi'),
+                DatePicker::make('tanggal_transaksi')
+                    ->label('Tanggal Transaksi')
+                    ->required(),
 
-        Select::make('user_id')
-            ->label('Kasir / Petugas')
-            ->relationship('user', 'name')
-            ->required(),
+                Select::make('user_id')
+                    ->label('Kasir / Petugas')
+                    ->relationship('user', 'name')
+                    ->required(),
+            ])->columns(2),
 
-        Repeater::make('details')
-            ->label('Detail Barang')
-            ->schema([
-                Hidden::make('id_barang')->dehydrated(),
+            Card::make([
+                Repeater::make('details')
+                    ->label('Detail Barang')
+                    ->schema([
+                        Toggle::make('is_new')
+                            ->label('Barang Baru?')
+                            ->default(false)
+                            ->inline()
+                            ->reactive(),
 
-                Toggle::make('is_new')
-                    ->label('Barang Baru?')
-                    ->default(false)
-                    ->reactive()
-                    ->inline(),
+                        Select::make('id_barang')
+                            ->label('Pilih Barang')
+                            ->options(fn () => Product::pluck('nama_barang', 'id'))
+                            ->searchable()
+                            ->visible(fn (Get $get) => !$get('is_new'))
+                            ->required(fn (Get $get) => !$get('is_new')),
 
-                Select::make('id_barang')
-                    ->label('Pilih Barang')
-                    ->options(fn () => Product::pluck('nama_barang', 'id'))
-                    ->searchable()
-                    ->visible(fn (Get $get) => !$get('is_new'))
-                    ->required(fn (Get $get) => !$get('is_new')),
+                        TextInput::make('nama_barang')
+                            ->label('Nama Barang')
+                            ->visible(fn (Get $get) => $get('is_new'))
+                            ->required(fn (Get $get) => $get('is_new')),
 
-                TextInput::make('nama_barang')
-                    ->label('Nama Barang')
-                    ->visible(fn (Get $get) => $get('is_new'))
-                    ->required(fn (Get $get) => $get('is_new')),
+                        TextInput::make('kategori')
+                            ->label('Kategori')
+                            ->visible(fn (Get $get) => $get('is_new'))
+                            ->required(fn (Get $get) => $get('is_new')),
 
-                TextInput::make('kategori')
-                    ->visible(fn (Get $get) => $get('is_new'))
-                    ->required(fn (Get $get) => $get('is_new')),
+                        TextInput::make('satuan')
+                            ->label('Satuan')
+                            ->visible(fn (Get $get) => $get('is_new'))
+                            ->required(fn (Get $get) => $get('is_new')),
 
-                TextInput::make('satuan')
-                    ->visible(fn (Get $get) => $get('is_new'))
-                    ->required(fn (Get $get) => $get('is_new')),
+                        TextInput::make('harga_jual')
+                            ->label('Harga Jual')
+                            ->numeric()
+                            ->visible(fn (Get $get) => $get('is_new'))
+                            ->required(fn (Get $get) => $get('is_new')),
 
-                TextInput::make('harga_jual')
-                    ->label('Harga Jual')
-                    ->numeric()
-                    ->visible(fn (Get $get) => $get('is_new'))
-                    ->required(fn (Get $get) => $get('is_new')),
+                        TextInput::make('kuantitas')
+                            ->label('Jumlah')
+                            ->numeric()
+                            ->required(),
 
-                TextInput::make('kuantitas')
-                    ->numeric()
-                    ->required()
-                    ->label('Jumlah'),
+                        TextInput::make('harga_satuan')
+                            ->label('Harga Satuan')
+                            ->numeric()
+                            ->required(),
 
-                TextInput::make('harga_satuan')
-                    ->numeric()
-                    ->required()
-                    ->label('Harga Satuan'),
-            ])
-            ->columns(2)
-            ->required(),
-    ]);
-}
+                        Hidden::make('id_barang')
+                            ->dehydrated(), 
+                    ])
+                    ->columns(3)
+                    ->addActionLabel('Tambah Barang')
+                    ->required(),
+            ]),
+        ]);
+    }
 
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('tanggal_transaksi')->date('d M Y'),
-                Tables\Columns\TextColumn::make('user.name')->label('Kasir'),
-                Tables\Columns\TextColumn::make('total_harga')->money('IDR')->label('Total Harga'),
+                Tables\Columns\TextColumn::make('tanggal_transaksi')
+                    ->label('Tanggal Transaksi')
+                    ->date('d M Y'),
+
+                Tables\Columns\TextColumn::make('user.name')
+                    ->label('Kasir'),
+
+                Tables\Columns\TextColumn::make('total_harga')
+                    ->label('Total Harga')
+                    ->money('IDR'),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\ViewAction::make()->label('Lihat'),
+                Tables\Actions\EditAction::make()->label('Edit'),
+                Tables\Actions\DeleteAction::make()->label('Hapus'),
             ])
             ->defaultSort('tanggal_transaksi', 'desc');
     }

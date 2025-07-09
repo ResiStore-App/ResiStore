@@ -4,15 +4,22 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\SellTransactionResource\Pages;
 use App\Models\Transaction;
+use App\Models\Product;
 use Filament\Resources\Resource;
 use Filament\Forms\Form;
-use Filament\Forms\Components\{
-    DatePicker, Select, TextInput, Toggle, Repeater, Hidden
-};
 use Filament\Forms\Get;
+use Filament\Forms\Components\{
+    Card,
+    DatePicker,
+    Select,
+    TextInput,
+    Toggle,
+    Repeater,
+    Hidden,
+    Placeholder
+};
 use Filament\Tables;
 use Filament\Tables\Table;
-use App\Models\Product;
 
 class SellTransactionResource extends Resource
 {
@@ -24,44 +31,61 @@ class SellTransactionResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Hidden::make('jenis_transaksi')->default('penjualan'),
+            Card::make([
+                Hidden::make('jenis_transaksi')->default('penjualan'),
 
-            DatePicker::make('tanggal_transaksi')->required(),
+                DatePicker::make('tanggal_transaksi')
+                    ->label('Tanggal Transaksi')
+                    ->required(),
 
-            Select::make('user_id')
-                ->label('Kasir / Petugas')
-                ->relationship('user', 'name')
-                ->required(),
+                Select::make('user_id')
+                    ->label('Kasir / Petugas')
+                    ->relationship('user', 'name')
+                    ->required(),
+            ])->columns(2),
 
-           Repeater::make('details')
-                ->label('Detail Barang')
-                ->schema([
-                    Hidden::make('id_barang')->dehydrated(),
+            Card::make([
+                Repeater::make('details')
+                    ->label('Detail Barang')
+                    ->schema([
+                        Hidden::make('id_barang')->dehydrated(),
 
-                    Select::make('id_barang')
-                        ->label('Pilih Barang')
-                        ->options(fn () => \App\Models\Product::pluck('nama_barang', 'id'))
-                        ->searchable()
-                        ->required()
-                        ->reactive()
-                        ->afterStateUpdated(function ($state, callable $set) {
-                            $product = \App\Models\Product::find($state);
-                            if ($product) {
-                                $set('harga_satuan', $product->harga_jual);
-                            } else {
-                                $set('harga_satuan', 0);
-                            }
-                        }),
+                        Select::make('id_barang')
+                            ->label('Pilih Barang')
+                            ->options(fn () => Product::pluck('nama_barang', 'id'))
+                            ->searchable()
+                            ->required()
+                            ->reactive()
+                            ->afterStateUpdated(function ($state, callable $set) {
+                                $product = Product::find($state);
+                                if ($product) {
+                                    $set('harga_satuan', $product->harga_jual);
+                                } else {
+                                    $set('harga_satuan', 0);
+                                }
+                            }),
 
-                    TextInput::make('kuantitas')
-                        ->numeric()
-                        ->required()
-                        ->label('Jumlah'),
+                        TextInput::make('kuantitas')
+                            ->numeric()
+                            ->required()
+                            ->label('Jumlah'),
 
-                ])
-                ->columns(2)
-                ->required(),
-            ]);
+                        Placeholder::make('harga_satuan_display')
+                            ->label('Harga Satuan')
+                            ->content(function ($get) {
+                                $product = Product::find($get('id_barang'));
+                                return $product
+                                    ? 'Rp ' . number_format($product->harga_jual, 0, ',', '.')
+                                    : '-';
+                            }),
+
+                        Hidden::make('harga_satuan'),
+                    ])
+                    ->columns(3)
+                    ->required()
+                    ->addActionLabel('Tambah Barang')
+            ]),
+        ]);
     }
 
     public static function table(Table $table): Table
