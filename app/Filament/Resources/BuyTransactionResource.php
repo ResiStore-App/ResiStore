@@ -96,7 +96,6 @@ class BuyTransactionResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('id')->label('ID Transaksi'),
                 Tables\Columns\TextColumn::make('tanggal_transaksi')->date('d M Y'),
                 Tables\Columns\TextColumn::make('user.name')->label('Kasir'),
                 Tables\Columns\TextColumn::make('total_harga')->money('IDR')->label('Total Harga'),
