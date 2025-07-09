@@ -12,9 +12,9 @@ class Transaction extends Model
     protected $table = 'tb_transaksi';
 
     protected $fillable = [
-        'kode_transaksi',
-        'tanggal',
-        'total',
+        'tanggal_transaksi',
+        'jenis_transaksi',
+        'total_harga',
         'user_id',
     ];
 
@@ -23,8 +23,8 @@ class Transaction extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function detail()
+    public function details()
     {
-        return $this->hasMany(DetailTransaction::class, 'transaksi_id');
+        return $this->hasMany(DetailTransaction::class, 'id_transaksi');
     }
 }
