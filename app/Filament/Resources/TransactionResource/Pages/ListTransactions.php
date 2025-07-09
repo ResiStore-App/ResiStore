@@ -13,7 +13,14 @@ class ListTransactions extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            Actions\Action::make('Transaksi Penjualan')
+                ->url(fn () => static::getResource()::getUrl('create-penjualan'))
+                ->button(),
+
+            Actions\Action::make('Transaksi Pembelian')
+                ->url(fn () => static::getResource()::getUrl('create-pembelian'))
+                ->color('success')
+                ->button(),
         ];
     }
 }

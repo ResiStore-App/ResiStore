@@ -22,6 +22,6 @@ class Product extends Model
 
   public function detailTransaksi()
   {
-    return $this->hasMany(DetailTransaction::class, 'barang_id');
+    return $this->hasMany(DetailTransaction::class, 'id_barang');
   }
 }

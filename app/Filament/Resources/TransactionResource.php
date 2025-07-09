@@ -3,12 +3,10 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\TransactionResource\Pages;
-use App\Models\Product;
 use App\Models\Transaction;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Forms\Components\Group;
-use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
@@ -17,7 +15,6 @@ use Filament\Forms\Get;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
 
 class TransactionResource extends Resource
 {
@@ -26,20 +23,12 @@ class TransactionResource extends Resource
     protected static ?string $navigationLabel = 'Transaksi';
     protected static ?string $label = 'Transaksi';
 
-   public static function form(Form $form): Form
+    public static function form(Form $form): Form
     {
         return $form->schema([
             DatePicker::make('tanggal_transaksi')
                 ->required()
                 ->label('Tanggal Transaksi'),
-
-            Select::make('jenis_transaksi')
-                ->options([
-                    'penjualan' => 'Penjualan',
-                    'pembelian' => 'Pembelian / Restock',
-                ])
-                ->required()
-                ->label('Jenis Transaksi'),
 
             Select::make('user_id')
                 ->label('Kasir / Petugas')
@@ -56,18 +45,14 @@ class TransactionResource extends Resource
                             ->relationship('barang', 'nama_barang')
                             ->searchable()
                             ->required()
-                            ->createOptionForm(fn (Get $get) => $get('../../jenis_transaksi') === 'pembelian' ? [
+                            ->createOptionForm([
                                 TextInput::make('nama_barang')->required(),
                                 TextInput::make('kategori')->required(),
                                 TextInput::make('satuan')->required(),
-                                TextInput::make('stok')
-                                    ->numeric()
-                                    ->default(0)
-                                    ->label('Stok Awal'),
+                                TextInput::make('stok')->numeric()->default(0)->label('Stok Awal'),
                                 TextInput::make('harga_beli')->numeric()->required(),
                                 TextInput::make('harga_jual')->numeric()->required(),
-                            ] : [])
-                            ->disabled(fn (Get $get) => $get('../../jenis_transaksi') === 'penjualan'),
+                            ])
                     ])->columns(1),
 
                     TextInput::make('kuantitas')
@@ -122,7 +107,8 @@ class TransactionResource extends Resource
     {
         return [
             'index' => Pages\ListTransactions::route('/'),
-            'create' => Pages\CreateTransaction::route('/create'),
+            'create-penjualan' => Pages\CreateSellTransaction::route('/penjualan/create'),
+            'create-pembelian' => Pages\CreateBuyTransaction::route('/pembelian/create'),
             'edit' => Pages\EditTransaction::route('/{record}/edit'),
         ];
     }
