@@ -3,16 +3,21 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\TransactionResource\Pages;
-use App\Filament\Resources\TransactionResource\RelationManagers;
+use App\Models\Product;
 use App\Models\Transaction;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Components\Group;
+use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Get;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class TransactionResource extends Resource
 {
@@ -21,17 +26,22 @@ class TransactionResource extends Resource
     protected static ?string $navigationLabel = 'Transaksi';
     protected static ?string $label = 'Transaksi';
 
-    public static function form(Form $form): Form
+   public static function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\DatePicker::make('tanggal_transaksi')->required(),
-            Forms\Components\Select::make('jenis_transaksi')
+            DatePicker::make('tanggal_transaksi')
+                ->required()
+                ->label('Tanggal Transaksi'),
+
+            Select::make('jenis_transaksi')
                 ->options([
                     'penjualan' => 'Penjualan',
                     'pembelian' => 'Pembelian / Restock',
-                ])->required(),
+                ])
+                ->required()
+                ->label('Jenis Transaksi'),
 
-            Forms\Components\Select::make('user_id')
+            Select::make('user_id')
                 ->label('Kasir / Petugas')
                 ->relationship('user', 'name')
                 ->required(),
@@ -40,40 +50,66 @@ class TransactionResource extends Resource
                 ->label('Detail Barang')
                 ->relationship('details')
                 ->schema([
-                    Forms\Components\Select::make('id_barang')
-                        ->relationship('barang', 'nama_barang')
-                        ->required(),
+                    Group::make([
+                        Select::make('id_barang')
+                            ->label('Barang')
+                            ->relationship('barang', 'nama_barang')
+                            ->searchable()
+                            ->required()
+                            ->createOptionForm(fn (Get $get) => $get('../../jenis_transaksi') === 'pembelian' ? [
+                                TextInput::make('nama_barang')->required(),
+                                TextInput::make('kategori')->required(),
+                                TextInput::make('satuan')->required(),
+                                TextInput::make('stok')
+                                    ->numeric()
+                                    ->default(0)
+                                    ->label('Stok Awal'),
+                                TextInput::make('harga_beli')->numeric()->required(),
+                                TextInput::make('harga_jual')->numeric()->required(),
+                            ] : [])
+                            ->disabled(fn (Get $get) => $get('../../jenis_transaksi') === 'penjualan'),
+                    ])->columns(1),
 
-                    Forms\Components\TextInput::make('kuantitas')
+                    TextInput::make('kuantitas')
                         ->numeric()
-                        ->required(),
+                        ->required()
+                        ->label('Jumlah'),
 
-                    Forms\Components\TextInput::make('harga_satuan')
+                    TextInput::make('harga_satuan')
                         ->numeric()
-                        ->required(),
+                        ->required()
+                        ->label('Harga Satuan'),
                 ])
                 ->columns(3)
                 ->required(),
         ]);
     }
 
-   public static function table(Table $table): Table
+    public static function table(Table $table): Table
     {
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('id')->label('ID Transaksi'),
-                Tables\Columns\TextColumn::make('tanggal_transaksi')->date(),
-                Tables\Columns\TextColumn::make('jenis_transaksi')->badge(),
-                Tables\Columns\TextColumn::make('user.nama')->label('Kasir'),
-                Tables\Columns\TextColumn::make('total_harga')->money('IDR'),
+                Tables\Columns\TextColumn::make('tanggal_transaksi')
+                    ->label('Tanggal')
+                    ->date('d M Y'),
+                Tables\Columns\TextColumn::make('jenis_transaksi')
+                    ->label('Jenis')
+                    ->badge(),
+                Tables\Columns\TextColumn::make('user.nama')
+                    ->label('Kasir'),
+                Tables\Columns\TextColumn::make('total_harga')
+                    ->label('Total Harga')
+                    ->money('IDR'),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),   
-                Tables\Actions\EditAction::make(),   
-                Tables\Actions\DeleteAction::make(), 
+                Tables\Actions\ViewAction::make(),
+                Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('jenis_transaksi')
+                    ->label('Jenis Transaksi')
                     ->options([
                         'penjualan' => 'Penjualan',
                         'pembelian' => 'Pembelian',
@@ -81,7 +117,6 @@ class TransactionResource extends Resource
             ])
             ->defaultSort('tanggal_transaksi', 'desc');
     }
-
 
     public static function getPages(): array
     {
@@ -91,4 +126,4 @@ class TransactionResource extends Resource
             'edit' => Pages\EditTransaction::route('/{record}/edit'),
         ];
     }
-}  
+}
