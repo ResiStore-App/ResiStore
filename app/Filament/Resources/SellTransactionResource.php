@@ -16,10 +16,12 @@ use Filament\Forms\Components\{
     Toggle,
     Repeater,
     Hidden,
-    Placeholder
+    Placeholder,
+    Section
 };
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class SellTransactionResource extends Resource
 {
@@ -31,7 +33,7 @@ class SellTransactionResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Card::make([
+            Section::make([
                 Hidden::make('jenis_transaksi')->default('penjualan'),
 
                 DatePicker::make('tanggal_transaksi')
@@ -44,7 +46,7 @@ class SellTransactionResource extends Resource
                     ->required(),
             ])->columns(2),
 
-            Card::make([
+            Section::make([
                 Repeater::make('details')
                     ->label('Detail Barang')
                     ->schema([
@@ -112,5 +114,10 @@ class SellTransactionResource extends Resource
             'edit' => Pages\EditSellTransaction::route('/{record}/edit'),
             'view' => Pages\ViewSellTransaction::route('/{record}'),
         ];
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->where('jenis_transaksi', 'penjualan');
     }
 }

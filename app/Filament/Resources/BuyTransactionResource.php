@@ -13,12 +13,14 @@ use Filament\Forms\Components\{
     DatePicker,
     Hidden,
     Repeater,
+    Section,
     Select,
     TextInput,
     Toggle
 };
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class BuyTransactionResource extends Resource
 {
@@ -30,7 +32,7 @@ class BuyTransactionResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Card::make([
+            Section::make([
                 Hidden::make('jenis_transaksi')->default('pembelian'),
 
                 DatePicker::make('tanggal_transaksi')
@@ -43,7 +45,7 @@ class BuyTransactionResource extends Resource
                     ->required(),
             ])->columns(2),
 
-            Card::make([
+            Section::make([
                 Repeater::make('details')
                     ->label('Detail Barang')
                     ->schema([
@@ -65,13 +67,39 @@ class BuyTransactionResource extends Resource
                             ->visible(fn (Get $get) => $get('is_new'))
                             ->required(fn (Get $get) => $get('is_new')),
 
-                        TextInput::make('kategori')
+                        Select::make('kategori')
                             ->label('Kategori')
+                            ->placeholder('-- Pilih Kategori Barang --')
+                            ->searchable()
+                            ->options([
+                                'komputer' => 'Komputer & Laptop',
+                                'monitor' => 'Monitor & Display',
+                                'printer' => 'Printer & Scanner',
+                                'jaringan' => 'Peralatan Jaringan',
+                                'aksesoris' => 'Aksesoris & Kabel',
+                                'penyimpanan' => 'Media Penyimpanan',
+                                'audio' => 'Audio & Mic',
+                                'elektronik_rumah' => 'Elektronik Rumah Tangga',
+                                'keamanan' => 'CCTV & Keamanan',
+                                'smart_home' => 'Smart Home & Otomasi',
+                                'komponen' => 'Komponen Elektronik & Robotik',
+                                'software' => 'Software & Lisensi',
+                                'servis' => 'Jasa Servis',
+                                'lainnya' => 'Lain-lain',
+                            ])
                             ->visible(fn (Get $get) => $get('is_new'))
                             ->required(fn (Get $get) => $get('is_new')),
 
-                        TextInput::make('satuan')
+                        Select::make('satuan')
                             ->label('Satuan')
+                            ->placeholder('-- Pilih Satuan Barang --')
+                            ->searchable()
+                            ->options([
+                                'pcs' => 'Pcs',   // Untuk barang eceran, kecil
+                                'unit' => 'Unit', // Untuk barang besar/formal
+                                'box' => 'Box',   // Untuk kemasan kotak/paket
+                                'set' => 'Set',   // Untuk barang yang dijual dalam set
+                            ])
                             ->visible(fn (Get $get) => $get('is_new'))
                             ->required(fn (Get $get) => $get('is_new')),
 
@@ -132,5 +160,10 @@ class BuyTransactionResource extends Resource
             'edit' => Pages\EditBuyTransaction::route('/{record}/edit'),
             'view' => Pages\ViewBuyTransaction::route('/{record}'),
         ];
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->where('jenis_transaksi', 'pembelian');
     }
 }
