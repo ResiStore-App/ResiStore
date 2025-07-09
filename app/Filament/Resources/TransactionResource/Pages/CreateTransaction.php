@@ -31,4 +31,8 @@ class CreateTransaction extends CreateRecord
             ->success()
             ->send();
     }
+     protected function getRedirectUrl(): string
+        {
+            return TransactionResource::getUrl('index');
+        }
 }

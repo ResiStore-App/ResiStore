@@ -58,29 +58,29 @@ class TransactionResource extends Resource
     }
 
    public static function table(Table $table): Table
-{
-    return $table
-        ->columns([
-            Tables\Columns\TextColumn::make('id')->label('ID Transaksi'),
-            Tables\Columns\TextColumn::make('tanggal_transaksi')->date(),
-            Tables\Columns\TextColumn::make('jenis_transaksi')->badge(),
-            Tables\Columns\TextColumn::make('user.nama')->label('Kasir'),
-            Tables\Columns\TextColumn::make('total_harga')->money('IDR'),
-        ])
-        ->actions([
-            Tables\Actions\ViewAction::make(),   // ⬅️ tombol Lihat detail
-            Tables\Actions\EditAction::make(),   // ⬅️ tombol Edit
-            Tables\Actions\DeleteAction::make(), // ⬅️ tombol Hapus
-        ])
-        ->filters([
-            Tables\Filters\SelectFilter::make('jenis_transaksi')
-                ->options([
-                    'penjualan' => 'Penjualan',
-                    'pembelian' => 'Pembelian',
-                ]),
-        ])
-        ->defaultSort('tanggal_transaksi', 'desc');
-}
+    {
+        return $table
+            ->columns([
+                Tables\Columns\TextColumn::make('id')->label('ID Transaksi'),
+                Tables\Columns\TextColumn::make('tanggal_transaksi')->date(),
+                Tables\Columns\TextColumn::make('jenis_transaksi')->badge(),
+                Tables\Columns\TextColumn::make('user.nama')->label('Kasir'),
+                Tables\Columns\TextColumn::make('total_harga')->money('IDR'),
+            ])
+            ->actions([
+                Tables\Actions\ViewAction::make(),   
+                Tables\Actions\EditAction::make(),   
+                Tables\Actions\DeleteAction::make(), 
+            ])
+            ->filters([
+                Tables\Filters\SelectFilter::make('jenis_transaksi')
+                    ->options([
+                        'penjualan' => 'Penjualan',
+                        'pembelian' => 'Pembelian',
+                    ]),
+            ])
+            ->defaultSort('tanggal_transaksi', 'desc');
+    }
 
 
     public static function getPages(): array
