@@ -14,7 +14,11 @@
 
 - **Manajemen User**
     
-    Tambah, edit, hapus barang seperti komputer, laptop, TV, dan lainnya.
+    Tambah, edit, hapus user oleh admin.
+
+- **Profil**
+
+    Edit akun sendiri.
 
 - **Transaksi**
 
@@ -23,7 +27,6 @@
 - **Keuangan**
 
     Mencatat pemasukan dan pengeluaran dengan grafik dan ekspor data.
-
 
 - **Hak Akses User (Role)**
 
