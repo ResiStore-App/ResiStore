@@ -4,18 +4,33 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages;
 use App\Models\User;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\{
+  CheckboxList,
+  Select,
+  TextInput
+};
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
-use Filament\Tables;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\DeleteBulkAction;
-use Filament\Tables\Actions\EditAction;
-use Filament\Tables\Columns\TextColumn;
+use Filament\Support\Enums\FontFamily;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Actions\{
+  DeleteAction,
+  DeleteBulkAction,
+  EditAction
+};
+use Filament\Tables\Columns\{
+  TextColumn,
+  Column
+};
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\Builder;
+
+Column::configureUsing(function (Column $column): void {
+  $column
+    ->toggleable()
+    ->sortable();
+});
 
 class UserResource extends Resource
 {
@@ -27,17 +42,17 @@ class UserResource extends Resource
 
   public static function canCreate(): bool
   {
-    return in_array(Auth::user()?->role, ['admin']);
+    return in_array(auth()->user()->role, ['admin']);
   }
 
   public static function canEdit($record): bool
   {
-    return in_array(Auth::user()?->role, ['admin']);
+    return in_array(auth()->user()->role, ['admin']);
   }
 
   public static function canDelete($record): bool
   {
-    return in_array(Auth::user()?->role, ['admin']);
+    return in_array(auth()->user()->role, ['admin']);
   }
 
   public static function form(Form $form): Form
@@ -45,16 +60,19 @@ class UserResource extends Resource
     return $form
       ->schema([
         TextInput::make('name')
-          ->label('Nama Pengguna')
+          ->label('Nama User')
           ->placeholder('Masukkan nama user')
           ->required()
           ->maxLength(50),
+
         TextInput::make('email')
           ->label('Email')
           ->placeholder('Masukkan email user')
           ->required()
           ->email()
-          ->maxLength(100),
+          ->maxLength(100)
+          ->prefixIcon('heroicon-m-envelope'),
+
         TextInput::make('password')
           ->label('Kata Sandi')
           ->placeholder('Masukkan kata sandi user')
@@ -62,8 +80,10 @@ class UserResource extends Resource
           ->password()
           ->minLength(6)
           ->maxLength(255)
+          ->revealable()
           ->dehydrateStateUsing(fn($state) => bcrypt($state))
           ->visibleOn('create'),
+
         Select::make('role')
           ->label('Role')
           ->placeholder('-- Pilih Role User --')
@@ -81,41 +101,72 @@ class UserResource extends Resource
   public static function table(Table $table): Table
   {
     return $table
+      ->recordAction(null)
       ->columns([
+        TextColumn::make('id')
+          ->label('ID'),
+
         TextColumn::make('name')
           ->label('Nama Pengguna')
-          ->searchable()
-          ->sortable(),
+          ->searchable(),
+
         TextColumn::make('email')
           ->label('Email')
+          ->icon('heroicon-m-envelope')
+          ->fontFamily(FontFamily::Mono)
           ->searchable()
-          ->sortable(),
+          ->copyable()
+          ->copyMessage('Email disalin ke clipboard')
+          ->copyMessageDuration(1500),
+
         TextColumn::make('role')
           ->label('Role')
-          ->searchable()
-          ->toggleable()
-          ->sortable()
           ->badge()
           ->color(fn(string $state): string => match ($state) {
             'admin' => 'danger',
             'cs' => 'success',
             'gudang' => 'info',
             'keuangan' => 'warning',
-            default => 'gray',
           })
           ->formatStateUsing(fn(string $state) => match ($state) {
             'admin' => 'Admin',
             'cs' => 'Kasir',
             'gudang' => 'Gudang',
             'keuangan' => 'Keuangan',
-            default => ucfirst($state),
           }),
+
         TextColumn::make('created_at')
           ->label('Dibuat Pada')
-          ->formatStateUsing(fn($state) => $state->format('d-m-Y')),
+          ->date('d-m-Y'),
+
+        TextColumn::make('updated_at')
+          ->label('Diperbarui Pada')
+          ->since()
+          ->toggleable(isToggledHiddenByDefault: true),
       ])
       ->filters([
-        //
+        Filter::make('roles')
+          ->form([
+            CheckboxList::make('roles')
+              ->label('Filter Role')
+              ->options([
+                'admin' => 'Admin',
+                'gudang' => 'Gudang',
+                'kasir' => 'Kasir',
+                'keuangan' => 'Keuangan',
+              ]),
+          ])
+          ->query(function (Builder $query, array $data) {
+            return $query->when(
+              $data['roles'],
+              fn($q, $roles) => $q->whereIn('role', $roles)
+            );
+          })
+          ->indicateUsing(function (array $data) {
+            return collect($data['roles'] ?? [])
+              ->map(fn($role) => 'Role: ' . ucfirst($role))
+              ->toArray();
+          }),
       ])
       ->actions([
         EditAction::make()
@@ -127,10 +178,13 @@ class UserResource extends Resource
           ->successNotification(
             Notification::make()
               ->success()
-              ->title('Berhasil Edit')
+              ->title('Berhasil Simpan')
               ->body('User telah berhasil diperbarui.')
           ),
+          
         DeleteAction::make()
+          ->color('danger')
+          ->iconButton()
           ->modalHeading('Hapus User')
           ->modalDescription('Apakah Anda yakin ingin menghapus user ini?')
           ->modalSubmitActionLabel('Hapus')
@@ -140,16 +194,19 @@ class UserResource extends Resource
               ->success()
               ->title('Berhasil Hapus')
               ->body('User telah berhasil dihapus.')
-          )
-          ->iconButton(),
+          ),
       ])
       ->bulkActions([
         DeleteBulkAction::make()
           ->modalHeading('Hapus User yang dipilih')
           ->modalDescription('Apakah Anda yakin ingin menghapus user yang dipilih?')
           ->modalSubmitActionLabel('Hapus')
-          ->successNotificationTitle('Berhasil!')
-          ->icon('heroicon-o-user-minus'),
+          ->successNotification(
+            Notification::make()
+              ->success()
+              ->title('Berhasil Hapus')
+              ->body('User yang dipilih berhasil dihapus.')
+          ),
       ]);
   }
 

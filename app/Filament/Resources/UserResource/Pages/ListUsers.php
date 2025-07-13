@@ -11,7 +11,7 @@ class ListUsers extends ListRecords
 {
   protected static string $resource = UserResource::class;
 
-  protected static ?string $title = 'Daftar User';
+  protected static ?string $title = 'Data User';
 
   protected function getHeaderActions(): array
   {
@@ -27,7 +27,7 @@ class ListUsers extends ListRecords
         ->successNotification(
           Notification::make()
             ->success()
-            ->title('Berhasil Tambah')
+            ->title('Berhasil Simpan')
             ->body('User baru telah berhasil ditambahkan.')
         ),
     ];

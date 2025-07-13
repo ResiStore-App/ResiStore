@@ -27,4 +27,17 @@ class Transaction extends Model
     {
         return $this->hasMany(DetailTransaction::class, 'id_transaksi');
     }
+
+    protected static function booted()
+    {
+        static::created(function ($transaksi) {
+            \App\Models\Finance::create([
+                'tanggal' => $transaksi->tanggal_transaksi,
+                'keterangan' => ucfirst($transaksi->jenis_transaksi) . ' ID #' . $transaksi->id,
+                'jenis' => $transaksi->jenis_transaksi === 'penjualan' ? 'pemasukan' : 'pengeluaran',
+                'nominal' => $transaksi->total_harga,
+                'user_id' => auth()->id(),
+            ]);
+        });
+    }
 }

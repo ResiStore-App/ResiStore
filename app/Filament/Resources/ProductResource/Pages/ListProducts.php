@@ -2,8 +2,13 @@
 
 namespace App\Filament\Resources\ProductResource\Pages;
 
+use App\Filament\Exports\ProductExporter;
 use App\Filament\Resources\ProductResource;
-use Filament\Actions\CreateAction;
+use Filament\Actions\{
+  CreateAction,
+  ExportAction
+};
+use Filament\Actions\Exports\Models\Export;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 
@@ -11,11 +16,19 @@ class ListProducts extends ListRecords
 {
   protected static string $resource = ProductResource::class;
 
-  protected static ?string $title = 'Daftar Barang';
+  protected static ?string $title = 'Data Barang';
 
   protected function getHeaderActions(): array
   {
     return [
+      ExportAction::make()
+        ->exporter(ProductExporter::class)
+        ->fileName(fn(Export $export): string => "semua-data-barang-{$export->getKey()}")
+        ->label('Ekspor Barang')
+        ->icon('heroicon-o-printer')
+        ->color('success')
+        ->modalHeading('Ekspor Semua Data Barang'),
+        
       CreateAction::make()
         ->label('Tambah Barang')
         ->icon('heroicon-o-squares-plus')
@@ -27,7 +40,7 @@ class ListProducts extends ListRecords
         ->successNotification(
           Notification::make()
             ->success()
-            ->title('Berhasil Tambah')
+            ->title('Berhasil Simpan')
             ->body('Barang baru telah berhasil ditambahkan.')
         ),
     ];
