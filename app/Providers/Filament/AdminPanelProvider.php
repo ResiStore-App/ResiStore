@@ -26,6 +26,7 @@ class AdminPanelProvider extends PanelProvider
       ->id('admin')
       ->path('admin')
       ->login()
+      ->brandName('ResiStore')
       ->profile(isSimple: false)
       ->colors([
         'primary' => Color::Cyan,
