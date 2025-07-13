@@ -118,7 +118,14 @@ class SellTransactionResource extends Resource
         Tables\Actions\ViewAction::make(),
         Tables\Actions\EditAction::make(),
         Tables\Actions\DeleteAction::make(),
+        Tables\Actions\Action::make('cetak-struk')
+        ->label('Invoice')
+        ->icon('heroicon-o-printer')
+        ->color('warning')
+        ->url(fn ($record) => route('struk.print', $record->id))
+        ->openUrlInNewTab(),
       ])
+
       ->defaultSort('tanggal_transaksi', 'desc');
   }
 
