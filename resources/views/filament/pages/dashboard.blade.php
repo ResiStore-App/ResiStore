@@ -134,4 +134,26 @@
             </div>
         </div>
     </div>
+    <div class="space-y-4">
+        <div class="flex gap-3">
+            <input 
+                disabled
+                wire:model="prompt"
+                type="text"
+                placeholder="gemini"
+                class="w-full border-gray-300 rounded-lg dark:bg-gray-800 dark:text-white"
+            />
+
+            <x-filament::button wire:click="generateFromGemini">
+                Tanya Gemini
+            </x-filament::button>
+        </div>
+
+        @if ($jawaban)
+            <div class="p-4 bg-gray-100 dark:bg-gray-800 rounded-lg mt-4 whitespace-pre-line">
+                <h3 class="font-semibold mb-2">Jawaban:</h3>
+                <p class="text-gray-900 dark:text-white">{{ $jawaban }}</p>
+            </div>
+        @endif
+    </div>
 </x-filament::page>
