@@ -21,6 +21,10 @@ COPY . /var/www/html
 
 RUN composer install --no-dev --optimize-autoloader
 
+# Publish Filament assets
+RUN php artisan vendor:publish --tag=filament-config --force
+RUN php artisan vendor:publish --tag=filament-assets --force
+
 # Jalankan Laravel Artisan commands yang penting
 RUN php artisan config:clear \
   && php artisan route:clear \
