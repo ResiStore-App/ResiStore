@@ -9,6 +9,12 @@ RUN apt-get update && apt-get install -y \
   unzip \
   && docker-php-ext-install pdo pdo_mysql intl zip
 
+# Enable Apache Rewrite
+RUN a2enmod rewrite
+
+# Set DocumentRoot ke public
+COPY ./apache.conf /etc/apache2/sites-available/000-default.conf
+
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 COPY . /var/www/html
