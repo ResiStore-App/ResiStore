@@ -21,6 +21,12 @@ COPY . /var/www/html
 
 RUN composer install --no-dev --optimize-autoloader
 
+# Jalankan Laravel Artisan commands yang penting
+RUN php artisan config:clear \
+  && php artisan route:clear \
+  && php artisan view:clear \
+  && php artisan storage:link || true
+
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
 EXPOSE 80
