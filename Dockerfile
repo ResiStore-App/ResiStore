@@ -1,31 +1,23 @@
-FROM php:8.3-fpm-alpine
+FROM php:8.3-fpm
 
-# Install system deps
-RUN apk add --no-cache nginx curl bash git unzip supervisor \
-  icu-dev zlib-dev libzip-dev libpng-dev libjpeg-turbo-dev oniguruma-dev \
-  && docker-php-ext-install intl zip pdo pdo_mysql mbstring gd
+WORKDIR /var/www
 
-# Install composer
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+RUN apt-get update && apt-get install -y \
+  zip unzip curl git libxml2-dev libzip-dev libpng-dev libjpeg-dev libonig-dev \
+  sqlite3 libsqlite3-dev
 
-# Setup working dir
-WORKDIR /var/www/html
+RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd zip
 
-# Copy app source
-COPY . .
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Install PHP dependencies
-RUN composer install --no-dev --optimize-autoloader
+COPY . /var/www
+COPY --chown=www-data:www-data . /var/www
 
-# Copy nginx config
-COPY docker/nginx.conf /etc/nginx/nginx.conf
+RUN chmod -R 755 /var/www
+RUN composer install
 
-# Add simple process manager (no s6)
-COPY docker/start.sh /start.sh
-RUN chmod +x /start.sh
+COPY .env.example .env
+RUN php artisan key:generate
 
-# Expose ports
-EXPOSE 80
-
-# Run Nginx + PHP-FPM
-CMD ["/start.sh"]
+EXPOSE 8000
+CMD php artisan serve --host=0.0.0.0 --port=8000
