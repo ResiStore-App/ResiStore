@@ -7,13 +7,15 @@ RUN apk add --no-cache \
   curl \
   zip \
   unzip \
+  icu-dev \
+  oniguruma-dev \
   libpng-dev \
   libjpeg-turbo-dev \
   libwebp-dev \
   freetype-dev \
-  oniguruma-dev \
   libzip-dev \
-  && docker-php-ext-install pdo pdo_mysql mbstring zip exif pcntl bcmath gd
+  && docker-php-ext-install intl pdo pdo_mysql mbstring zip exif pcntl bcmath gd
+
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
