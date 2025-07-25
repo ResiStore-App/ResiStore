@@ -1,9 +1,13 @@
 FROM php:8.3-fpm
 
-# Install system dependencies
+# Install system dependencies, tambahkan libonig-dev
 RUN apt-get update && apt-get install -y \
   nginx \
-  zip unzip curl git libpng-dev libjpeg-dev libfreetype6-dev libicu-dev libxml2-dev libzip-dev sqlite3 libsqlite3-dev
+  zip unzip curl git libpng-dev libjpeg-dev libfreetype6-dev \
+  libicu-dev libxml2-dev libzip-dev \
+  sqlite3 libsqlite3-dev \
+  libonig-dev \
+  pkg-config
 
 # Install PHP extensions
 RUN docker-php-ext-install intl pdo pdo_mysql mbstring exif pcntl bcmath gd zip
@@ -21,11 +25,15 @@ COPY nginx.conf /etc/nginx/nginx.conf
 # Give permissions
 RUN chown -R www-data:www-data /var/www/html
 
-# Copy and give execute permission to deploy script
+# Fix storage & cache permission
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+
+# Copy deploy script
 COPY deploy.sh /usr/local/bin/deploy.sh
 RUN chmod +x /usr/local/bin/deploy.sh
 
-# Expose port 10000 (Render default)
+# Expose port Render default
 EXPOSE 10000
 
 # Start deploy script
