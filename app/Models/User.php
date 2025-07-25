@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
@@ -17,7 +19,7 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $table = 'tb_users';
-    
+
     protected $fillable = [
         'name',
         'email',
@@ -65,5 +67,10 @@ class User extends Authenticatable
     public function keuangan()
     {
         return $this->hasMany(Finance::class, 'user_id');
+    }
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return true;
     }
 }
