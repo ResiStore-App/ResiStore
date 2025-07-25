@@ -1,20 +1,31 @@
-FROM serversideup/php:8.3-fpm-nginx-alpine-v3.0.0
+FROM php:8.3-fpm-alpine
 
+# Install system deps
+RUN apk add --no-cache nginx curl bash git unzip supervisor \
+  icu-dev zlib-dev libzip-dev libpng-dev libjpeg-turbo-dev oniguruma-dev \
+  && docker-php-ext-install intl zip pdo pdo_mysql mbstring gd
+
+# Install composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# Setup working dir
+WORKDIR /var/www/html
+
+# Copy app source
 COPY . .
 
-# Image config
-ENV SKIP_COMPOSER 1
-ENV WEBROOT /var/www/html/public
-ENV PHP_ERRORS_STDERR 1
-ENV RUN_SCRIPTS 1
-ENV REAL_IP_HEADER 1
+# Install PHP dependencies
+RUN composer install --no-dev --optimize-autoloader
 
-# Laravel config
-ENV APP_ENV production
-ENV APP_DEBUG false
-ENV LOG_CHANNEL stderr
+# Copy nginx config
+COPY docker/nginx.conf /etc/nginx/nginx.conf
 
-# Allow composer to run as root
-ENV COMPOSER_ALLOW_SUPERUSER 1
+# Add simple process manager (no s6)
+COPY docker/start.sh /start.sh
+RUN chmod +x /start.sh
 
+# Expose ports
+EXPOSE 80
+
+# Run Nginx + PHP-FPM
 CMD ["/start.sh"]
