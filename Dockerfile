@@ -1,23 +1,32 @@
 FROM php:8.3-fpm
 
-WORKDIR /var/www
-
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
-  zip unzip curl git libxml2-dev libzip-dev libpng-dev libjpeg-dev libonig-dev \
-  sqlite3 libsqlite3-dev
+  nginx \
+  zip unzip curl git libpng-dev libjpeg-dev libfreetype6-dev libicu-dev libxml2-dev libzip-dev sqlite3 libsqlite3-dev
 
-RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd zip
+# Install PHP extensions
+RUN docker-php-ext-install intl pdo pdo_mysql mbstring exif pcntl bcmath gd zip
 
+# Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-COPY . /var/www
-COPY --chown=www-data:www-data . /var/www
+# Copy source code
+WORKDIR /var/www/html
+COPY . /var/www/html
 
-RUN chmod -R 755 /var/www
-RUN composer install
+# Copy custom nginx config
+COPY nginx.conf /etc/nginx/nginx.conf
 
-COPY .env.example .env
-RUN php artisan key:generate
+# Give permissions
+RUN chown -R www-data:www-data /var/www/html
 
-EXPOSE 8000
-CMD php artisan serve --host=0.0.0.0 --port=8000
+# Copy and give execute permission to deploy script
+COPY deploy.sh /usr/local/bin/deploy.sh
+RUN chmod +x /usr/local/bin/deploy.sh
+
+# Expose port 10000 (Render default)
+EXPOSE 10000
+
+# Start deploy script
+CMD ["bash", "/usr/local/bin/deploy.sh"]
